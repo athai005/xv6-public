@@ -69,6 +69,7 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+  //p->priority = 63;
 
   return p;
 }
@@ -511,4 +512,17 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+void chprio(int pid, int priority)
+{
+  struct proc *p;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if (p->pid == pid)
+    {
+      if(priority >= 0 && priority <= 63) p->priority = priority;
+      else p->priority = 63;
+      return;
+    }
+  }
+  return;
 }
