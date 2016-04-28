@@ -47,6 +47,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->priority = 63;
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -69,7 +70,6 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
-  //p->priority = 63;
 
   return p;
 }
@@ -242,7 +242,7 @@ wait(int *status)
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
-	if (status > 0) *status = p->exitstat;
+	//if (status > 0) *status = p->exitstat;
         release(&ptable.lock);
         return pid;
       }
@@ -513,16 +513,19 @@ procdump(void)
     cprintf("\n");
   }
 }
-void chprio(int pid, int priority)
+void chprio(int pid, int prio)
 {
   struct proc *p;
+  acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if (p->pid == pid)
     {
-      if(priority >= 0 && priority <= 63) p->priority = priority;
+      if(prio >= 0 && prio <= 63) p->priority = prio;
       else p->priority = 63;
+      release(&ptable.lock);
       return;
     }
   }
+  release(&ptable.lock);
   return;
 }
