@@ -258,7 +258,7 @@ wait(int *status)
     sleep(proc, &ptable.lock);  //DOC: wait-sleep
   }
 }
-/*
+
 int
 waitpid (int pid, int *status, int options)
 {
@@ -284,7 +284,7 @@ waitpid (int pid, int *status, int options)
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
-//	if (status) *status = p->exitstat;
+	if (status>0) *status = p->exitstat;
         release(&ptable.lock);
         return zpid;
       }
@@ -301,7 +301,7 @@ waitpid (int pid, int *status, int options)
     sleep(proc, &ptable.lock);  //DOC: wait-sleep
   }
 }
-*/
+
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
