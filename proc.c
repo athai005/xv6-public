@@ -250,7 +250,7 @@ wait(int *status)
 
     // No point waiting if we don't have any children.
     if(!havekids || proc->killed){
-      *status = -1;
+      //if (status > 0) *status = -1;
       release(&ptable.lock);
       return -1;
     }
@@ -314,13 +314,18 @@ waitpid (int pid, int *status, int options)
 void
 scheduler(void)
 {
+
+  /**** ORIGINAL VERSION ****/
   struct proc *p;
+  //struct proc *next;
+  int prio;
 
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
     // Loop over process table looking for process to run.
+/*
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
@@ -340,7 +345,32 @@ scheduler(void)
       proc = 0;
     }
     release(&ptable.lock);
+*/
+  /**** ORIGINAL VERSION ****/
 
+  //PRIORITY VERSION
+    for(prio = 0; prio < NPROC; prio++)
+    {
+      acquire(&ptable.lock);
+      //next = 0;
+      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+      {
+        if (p->state != RUNNABLE)
+          continue;
+        //if(next == 0 || p->priority < next->priority)
+          //next = p;
+        if (p->priority == prio)
+        {
+					proc = p;
+					switchuvm(p);
+					p->state = RUNNING;
+					swtch(&cpu->scheduler, proc->context);
+					switchkvm();
+        }
+        proc = 0;
+       }
+      release(&ptable.lock);
+    }
   }
 }
 
