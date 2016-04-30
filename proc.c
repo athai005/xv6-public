@@ -49,6 +49,7 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->priority = 63;
+  p->exitstat = 0;
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -265,17 +266,17 @@ int
 waitpid (int pid, int *status, int options)
 {
   struct proc *p;
-  int havekids, zpid;
+  int procexists, zpid;
 
   acquire(&ptable.lock);
   for(;;){
     // Scan through table looking for zombie children.
-    havekids = 0;
+    procexists = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != proc)
+      if(p->pid != pid)
         continue;
-      havekids = 1;
-      if(p->state == ZOMBIE || p->pid == pid){
+      procexists = 1;
+      if(p->state == ZOMBIE){
         // Found one.
         zpid = p->pid;
         kfree(p->kstack);
@@ -286,15 +287,15 @@ waitpid (int pid, int *status, int options)
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
-	if (status>0) *status = p->exitstat;
+	if (status != 0) *status = p->exitstat;
         release(&ptable.lock);
         return zpid;
       }
     }
 
     // No point waiting if we don't have any children.
-    if(!havekids || proc->killed){
-      if (status > 0) *status = -1;
+    if(!procexists || proc->killed){
+      //if (status > 0) *status = -1;
       release(&ptable.lock);
       return -1;
     }
