@@ -32,9 +32,11 @@ sys_waitpid(int pid, int *status, int options)
   return waitpid(pid, status, options);
 }
 
-void sys_chprio(int pid, int prio)
+void sys_chprio(void)
 {
-  chprio(pid, prio);
+  int prio;
+  argint(0, &prio);
+  chprio(prio);
   return;
 }
 

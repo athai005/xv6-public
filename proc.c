@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include <stdio.h>
 
 struct {
   struct spinlock lock;
@@ -349,6 +350,7 @@ scheduler(void)
   /**** ORIGINAL VERSION ****/
 
   //PRIORITY VERSION
+    int currprio = 0;
     for(prio = 0; prio < NPROC; prio++)
     {
       acquire(&ptable.lock);
@@ -361,14 +363,26 @@ scheduler(void)
           //next = p;
         if (p->priority == prio)
         {
-					proc = p;
-					switchuvm(p);
-					p->state = RUNNING;
-					swtch(&cpu->scheduler, proc->context);
-					switchkvm();
+          proc = p;
+          currprio = prio;
         }
-        proc = 0;
-       }
+      }
+      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+      {
+        if (p->state != RUNNABLE)
+          continue;
+        //if(next == 0 || p->priority < next->priority)
+          //next = p;
+        if (p->priority <= currprio)
+        {
+          proc = p;
+          switchuvm(p);
+	  p->state = RUNNING;
+	  swtch(&cpu->scheduler, proc->context);
+	  switchkvm();
+        }
+          proc = 0;
+      }
       release(&ptable.lock);
     }
   }
@@ -543,8 +557,9 @@ procdump(void)
     cprintf("\n");
   }
 }
-void chprio(int pid, int prio)
+void chprio(int prio)
 {
+/*
   struct proc *p;
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -557,5 +572,9 @@ void chprio(int pid, int prio)
     }
   }
   release(&ptable.lock);
+*/
+  if (prio < 64 && prio >= 0) proc->priority = prio;
+  else proc->priority = 35;
+  //printf("setting priority = %d", prio);
   return;
 }
