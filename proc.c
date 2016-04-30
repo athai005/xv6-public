@@ -275,7 +275,7 @@ waitpid (int pid, int *status, int options)
       if(p->parent != proc)
         continue;
       havekids = 1;
-      if(p->state == ZOMBIE){
+      if(p->state == ZOMBIE || p->pid == pid){
         // Found one.
         zpid = p->pid;
         kfree(p->kstack);
